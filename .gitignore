@@ -1,0 +1,8 @@
+﻿纠的回忆录/
+*.py
+compress_videos.bat
+dist/
+output/
+node_modules/
+.DS_Store
+Thumbs.db
