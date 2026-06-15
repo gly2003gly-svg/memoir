@@ -1,0 +1,265 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
+<meta name="theme-color" content="#d4845a">
+<title>纠的回忆录</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-start:#fef9f0;--bg-mid:#fdf2e4;--bg-end:#fce4d6;
+  --accent:#d4845a;--accent-light:#e8b89d;--text:#5d4037;--text-light:#8d6e63;
+  --card-bg:#fffbf7;--radius:12px;--radius-sm:8px;
+  --shadow:0 2px 12px rgba(180,120,80,.1);
+  --shadow-hover:0 6px 24px rgba(180,120,80,.18);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  background:linear-gradient(180deg,var(--bg-start) 0%,var(--bg-mid) 40%,var(--bg-end) 100%);
+  background-attachment:fixed;color:var(--text);min-height:100vh;overflow-x:hidden;
+}
+
+/* Header */
+.header{text-align:center;padding:50px 16px 30px;position:relative}
+.header::after{content:'';position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:50px;height:2px;background:linear-gradient(90deg,transparent,var(--accent-light),transparent);border-radius:2px}
+.header h1{font-size:2.4em;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:6px}
+.header .subtitle{font-size:1em;color:var(--text-light);font-weight:300;letter-spacing:.06em}
+.header .count{margin-top:10px;font-size:.85em;color:var(--text-light);opacity:.7}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:var(--bg-start);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s}
+.loading-overlay.done{opacity:0;pointer-events:none}
+.loading-spinner{width:44px;height:44px;border:3px solid var(--accent-light);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.loading-text{margin-top:14px;color:var(--text-light);font-size:.9em}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Gallery */
+.gallery{max-width:1600px;margin:0 auto;padding:0 10px 40px;column-count:5;column-gap:10px}
+@media(max-width:1400px){.gallery{column-count:4}}
+@media(max-width:1000px){.gallery{column-count:3}}
+@media(max-width:680px){.gallery{column-count:2;column-gap:6px;padding:0 4px 30px}}
+
+/* Card */
+.card{break-inside:avoid;margin-bottom:10px;border-radius:var(--radius);overflow:hidden;background:var(--card-bg);box-shadow:var(--shadow);cursor:pointer;transition:transform .3s,box-shadow .3s;position:relative}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.card:active{transform:scale(.97)}
+.card img,.card video{display:block;width:100%;height:auto;background:#f5ede6}
+.card img{min-height:60px}
+
+.video-badge,.heic-badge{position:absolute;top:8px;left:8px;border-radius:16px;padding:3px 10px;font-size:.72em;pointer-events:none;z-index:2;display:flex;align-items:center;gap:4px;backdrop-filter:blur(4px)}
+.video-badge{background:rgba(0,0,0,.5);color:#fff}
+.heic-badge{background:rgba(0,0,0,.35);color:#fff;top:8px;left:auto;right:8px}
+
+/* Load more */
+.sentinel{height:1px;column-span:all}
+.loading-row{column-span:all;text-align:center;padding:20px;display:none}
+.loading-row.show{display:block}
+.end-row{column-span:all;text-align:center;padding:30px;color:var(--text-light);font-size:.85em;display:none}
+.end-row.show{display:block}
+
+/* Lightbox */
+.lb{position:fixed;inset:0;background:rgba(18,10,6,.94);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;animation:lbIn .25s ease}
+.lb.hidden{display:none}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+.lb-close{position:absolute;top:12px;right:16px;width:40px;height:40px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:1.3em;border-radius:50%;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.lb-close:hover{background:rgba(255,255,255,.2)}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:1.3em;border-radius:50%;cursor:pointer;z-index:10}
+.lb-nav:hover{background:rgba(255,255,255,.22)}
+.lb-prev{left:10px}.lb-next{right:10px}
+.lb-content{max-width:92vw;max-height:88vh;display:flex;align-items:center;justify-content:center}
+.lb-content img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:var(--radius-sm);box-shadow:0 6px 30px rgba(0,0,0,.4)}
+.lb-content video{max-width:92vw;max-height:88vh;border-radius:var(--radius-sm);box-shadow:0 6px 30px rgba(0,0,0,.4);outline:none}
+.lb-counter{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.55);font-size:.8em}
+.lb-fname{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font-size:.7em;max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Scroll top */
+.scroll-top{position:fixed;bottom:22px;right:22px;width:40px;height:40px;border-radius:50%;background:var(--card-bg);box-shadow:var(--shadow);border:none;cursor:pointer;font-size:1.2em;color:var(--accent);opacity:0;transform:translateY(10px);transition:.3s;z-index:99;pointer-events:none}
+.scroll-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+
+/* Mobile tweaks */
+@media(max-width:480px){
+  .header h1{font-size:1.8em}.header{padding:35px 10px 20px}
+  .lb-nav{width:34px;height:34px;font-size:1em}.lb-prev{left:4px}.lb-next{right:4px}
+  .lb-close{top:8px;right:10px;width:34px;height:34px}
+}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--accent-light);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <p class="loading-text" id="loadingText">正在加载回忆…</p>
+</div>
+
+<header class="header">
+  <h1>&#x1F338; 纠的回忆录</h1>
+  <p class="subtitle">每一帧，都是时光的温柔</p>
+  <p class="count" id="countDisplay"></p>
+</header>
+
+<div class="gallery" id="gallery"></div>
+<div class="sentinel" id="sentinel"></div>
+<div class="loading-row" id="loadingRow">&#x1F33F; 正在加载更多回忆…</div>
+<div class="end-row" id="endRow">&#x2728; 已经看到全部回忆了 &#x2728;</div>
+
+<!-- Lightbox -->
+<div class="lb hidden" id="lb">
+  <button class="lb-close" id="lbClose">&times;</button>
+  <button class="lb-nav lb-prev" id="lbPrev">&#x25C2;</button>
+  <button class="lb-nav lb-next" id="lbNext">&#x25B8;</button>
+  <div class="lb-content" id="lbContent"></div>
+  <div class="lb-fname" id="lbFname"></div>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+
+<script>
+(function(){
+var manifest=[],BATCH=30,current=0,loading=false,allDone=false;
+var lbIdx=-1,lbOpen=false;
+
+var gallery=document.getElementById('gallery'),
+    sentinel=document.getElementById('sentinel'),
+    loadingRow=document.getElementById('loadingRow'),
+    endRow=document.getElementById('endRow'),
+    countDisp=document.getElementById('countDisplay'),
+    lb=document.getElementById('lb'),
+    lbContent=document.getElementById('lbContent'),
+    lbFname=document.getElementById('lbFname'),
+    lbCounter=document.getElementById('lbCounter'),
+    loadingOv=document.getElementById('loadingOverlay'),
+    loadingTxt=document.getElementById('loadingText');
+
+// Load manifest
+fetch('media.json').then(function(r){return r.json()}).then(function(data){
+  manifest=data;
+  countDisp.textContent='共 '+manifest.length+' 张回忆（'+
+    manifest.filter(function(m){return m.type==='image'}).length+' 张照片 · '+
+    manifest.filter(function(m){return m.type==='video'}).length+' 个视频）';
+  loadingTxt.textContent='正在加载回忆…';
+  renderBatch();
+  loadingOv.classList.add('done');
+}).catch(function(e){
+  loadingTxt.textContent='加载失败，请刷新重试';
+  console.error(e);
+});
+
+function renderBatch(){
+  if(allDone)return;
+  var batch=manifest.slice(current,current+BATCH);
+  if(!batch.length){allDone=true;endRow.classList.add('show');return}
+  var frag=document.createDocumentFragment();
+  batch.forEach(function(m,i){
+    var idx=current+i;
+    var card=document.createElement('div');
+    card.className='card';card.dataset.idx=idx;
+    if(m.type==='image'){
+      var img=document.createElement('img');
+      img.loading='lazy';img.src=m.thumb||m.full;img.alt='';
+      img.dataset.full=m.full;
+      if(m.heic){
+        var hb=document.createElement('div');
+        hb.className='heic-badge';hb.textContent='HEIC';card.appendChild(hb);
+      }
+      card.appendChild(img);
+    }else if(m.type==='video'){
+      var vid=document.createElement('video');
+      vid.src=m.video;vid.muted=true;vid.playsInline=true;vid.preload='metadata';
+      card.appendChild(vid);
+      var vb=document.createElement('div');
+      vb.className='video-badge';vb.textContent='视频';card.appendChild(vb);
+    }
+    card.addEventListener('click',function(){openLB(idx)});
+    frag.appendChild(card);
+  });
+  gallery.appendChild(frag);
+  current+=batch.length;
+  if(current>=manifest.length){allDone=true;endRow.classList.add('show')}
+}
+
+// Intersection Observer
+var obs=new IntersectionObserver(function(entries){
+  if(entries[0].isIntersecting&&!loading&&!allDone){
+    loading=true;loadingRow.classList.add('show');
+    requestAnimationFrame(function(){
+      renderBatch();
+      loadingRow.classList.remove('show');
+      loading=false;
+    });
+  }
+},{rootMargin:'500px'});
+obs.observe(sentinel);
+
+// If viewport not filled, load more
+setTimeout(function(){
+  if(!allDone&&sentinel.getBoundingClientRect().top<window.innerHeight+500)renderBatch()
+},500);
+
+// Lightbox
+function openLB(idx){
+  lbIdx=idx;lbOpen=true;
+  lb.classList.remove('hidden');document.body.style.overflow='hidden';
+  renderLB();
+}
+function closeLB(){
+  lbOpen=false;lb.classList.add('hidden');document.body.style.overflow='';
+  lbContent.innerHTML='';
+}
+function navLB(dir){
+  if(!lbOpen)return;
+  var nxt=lbIdx+dir;
+  if(nxt<0||nxt>=manifest.length)return;
+  // Ensure rendered
+  if(current<=nxt){while(current<=nxt&&!allDone)renderBatch()}
+  lbIdx=nxt;renderLB();
+}
+function renderLB(){
+  var m=manifest[lbIdx];
+  lbContent.innerHTML='';lbFname.textContent=m.name;
+  lbCounter.textContent=(lbIdx+1)+' / '+manifest.length;
+  if(m.type==='image'){
+    var img=document.createElement('img');
+    img.src=m.full;img.alt='';lbContent.appendChild(img);
+  }else if(m.type==='video'){
+    var v=document.createElement('video');
+    v.src=m.video;v.controls=true;v.autoplay=true;v.playsInline=true;
+    lbContent.appendChild(v);
+  }
+}
+
+document.getElementById('lbClose').addEventListener('click',closeLB);
+document.getElementById('lbPrev').addEventListener('click',function(){navLB(-1)});
+document.getElementById('lbNext').addEventListener('click',function(){navLB(1)});
+lb.addEventListener('click',function(e){if(e.target===lb)closeLB()});
+
+document.addEventListener('keydown',function(e){
+  if(!lbOpen)return;
+  if(e.key==='Escape')closeLB();
+  else if(e.key==='ArrowLeft')navLB(-1);
+  else if(e.key==='ArrowRight')navLB(1);
+});
+
+// Touch swipe
+var tsX=0;
+lb.addEventListener('touchstart',function(e){tsX=e.touches[0].clientX});
+lb.addEventListener('touchend',function(e){
+  if(!lbOpen)return;
+  var dx=e.changedTouches[0].clientX-tsX;
+  if(Math.abs(dx)>50)navLB(dx>0?-1:1);
+});
+
+// Scroll to top
+var scrollBtn=document.createElement('button');
+scrollBtn.className='scroll-top';scrollBtn.innerHTML='&#x2191;';scrollBtn.title='回到顶部';
+scrollBtn.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+document.body.appendChild(scrollBtn);
+window.addEventListener('scroll',function(){scrollBtn.classList.toggle('show',window.scrollY>500)});
+})();
+</script>
+</body>
+</html>
